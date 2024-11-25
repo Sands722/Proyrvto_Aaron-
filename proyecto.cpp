@@ -7,13 +7,13 @@ void InicializarDiccionario(int& iNumElementos, char szPalabras[][TAMTOKEN], int
 int AbrirArchivo(const char* szNombre, FILE** fp);
 void ProcesarLinea(char* linea, char szPalabras[][TAMTOKEN], int iEstadisticas[], int& iNumElementos);
 void MostrarEstadisticas(const char szPalabras[][TAMTOKEN], const int iEstadisticas[], int iNumElementos);
+void ProcesarArchivo(FILE* fp, char szPalabras[][TAMTOKEN], int iEstadisticas[], int& iNumElementos);
 
 /***************************************
     DICCIONARIO: Esta función crea el diccionario completo
 ***************************************/
 void Diccionario(char* szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[], int& iNumElementos) {
     FILE* fp = NULL; // Puntero al archivo
-    char buffer[300]; // Buffer temporal para leer cada línea del archivo
 
     // Inicializar el diccionario
     InicializarDiccionario(iNumElementos, szPalabras, iEstadisticas);
@@ -23,10 +23,8 @@ void Diccionario(char* szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[
         return; // Salir si no se puede abrir el archivo
     }
 
-    // Leer línea por línea y procesarlas
-    while (fgets(buffer, sizeof(buffer), fp)) {
-        ProcesarLinea(buffer, szPalabras, iEstadisticas, iNumElementos);
-    }
+    // Procesar el archivo
+    ProcesarArchivo(fp, szPalabras, iEstadisticas, iNumElementos);
 
     // Cerrar el archivo
     fclose(fp);
@@ -60,6 +58,16 @@ int AbrirArchivo(const char* szNombre, FILE** fp) {
     }
     printf("Archivo %s abierto con éxito.\n", szNombre);
     return 0; // Archivo abierto correctamente
+}
+
+// Procesar el archivo línea por línea
+void ProcesarArchivo(FILE* fp, char szPalabras[][TAMTOKEN], int iEstadisticas[], int& iNumElementos) {
+    char buffer[300]; // Buffer temporal para leer cada línea del archivo
+
+    // Leer el archivo línea por línea
+    while (fgets(buffer, sizeof(buffer), fp)) {
+        ProcesarLinea(buffer, szPalabras, iEstadisticas, iNumElementos);
+    }
 }
 
 // Procesar una línea y extraer palabras al diccionario
