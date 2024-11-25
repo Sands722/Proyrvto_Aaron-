@@ -21,47 +21,53 @@
 	int		iEstadisticas[]			:	Arreglo con el numero de veces que aparecen las palabras en el diccionario
 	int &	iNumElementos			:	Numero de elementos en el diccionario
 **************************************/
-void Diccionario(char* szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[], int& iNumElementos)
-{
-	FILE* fp = nullptr; // Puntero al archivo
-	char buffer[300];   // Buffer temporal para leer líneas del archivo
-	iNumElementos = 0;  // Inicializamos el contador de elementos
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <cstring>
 
-	// Abrir el archivo en modo lectura
-	errno_t err = fopen_s(&fp, szNombre, "r");
-	if (err != 0 || fp == nullptr) {
-		printf("No se pudo abrir el archivo %s. Verifica la ruta o los permisos.\n", szNombre);
-		return;
-	}
+#define TAMTOKEN 100 // Tamaño máximo de cada palabra
 
-	// Leer el archivo línea por línea
-	while (fgets(buffer, sizeof(buffer), fp) != nullptr) {
-		// Procesar cada palabra en la línea
-		char* token = strtok(buffer, " \n\r"); // Separar palabras por espacios o saltos de línea
-		while (token != nullptr) {
-			// Verificar que no exceda el tamaño máximo de elementos
-			if (iNumElementos >= TAMTOKEN) {
-				printf("Se ha alcanzado el límite de palabras permitidas en el diccionario.\n");
-				break;
-			}
+void Diccionario(const char* szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[], int& iNumElementos) {
+    std::ifstream archivo(szNombre); // Archivo de entrada
+    std::string linea;               // Línea leída del archivo
+    iNumElementos = 0;               // Inicializamos el contador de elementos
 
-			// Copiar la palabra al arreglo de palabras
-			strcpy_s(szPalabras[iNumElementos], TAMTOKEN, token);
+    // Verificar si se abrió correctamente el archivo
+    if (!archivo.is_open()) {
+        std::cerr << "No se pudo abrir el archivo " << szNombre << ". Verifica la ruta o los permisos.\n";
+        return;
+    }
 
-			// Inicializar la estadística de aparición
-			iEstadisticas[iNumElementos] = 1;
+    // Leer el archivo línea por línea
+    while (std::getline(archivo, linea)) {
+        std::istringstream stream(linea); // Crear un flujo para procesar las palabras en la línea
+        std::string palabra;
 
-			// Incrementar el contador de palabras
-			iNumElementos++;
+        // Leer palabra por palabra en la línea
+        while (stream >> palabra) {
+            // Verificar que no exceda el tamaño máximo de elementos
+            if (iNumElementos >= TAMTOKEN) {
+                std::cerr << "Se ha alcanzado el límite de palabras permitidas en el diccionario.\n";
+                archivo.close();
+                return;
+            }
 
-			// Obtener el siguiente token
-			token = strtok(nullptr, " \n\r");
-		}
-	}
+            // Copiar la palabra al arreglo de palabras
+            strncpy(szPalabras[iNumElementos], palabra.c_str(), TAMTOKEN - 1);
+            szPalabras[iNumElementos][TAMTOKEN - 1] = '\0'; // Asegurar el fin de cadena
 
-	// Cerrar el archivo
-	fclose(fp);
+            // Inicializar la estadística de aparición
+            iEstadisticas[iNumElementos] = 1;
 
-	// Informar del número de palabras leídas
-	printf("Diccionario cargado con %d palabras.\n", iNumElementos);
+            // Incrementar el contador de palabras
+            iNumElementos++;
+        }
+    }
+
+    // Cerrar el archivo
+    archivo.close();
+
+    // Informar del número de palabras leídas
+    std::cout << "Diccionario cargado con " << iNumElementos << " palabras.\n";
 }
