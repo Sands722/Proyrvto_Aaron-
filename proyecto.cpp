@@ -19,55 +19,58 @@
 	char *	szNombre				:	Nombre del archivo de donde se sacaran las palabras del diccionario
 	char	szPalabras[][TAMTOKEN]	:	Arreglo con las palabras completas del diccionario
 	int		iEstadisticas[]			:	Arreglo con el numero de veces que aparecen las palabras en el diccionario
-	int &	iNumElementos			:	Numero de elementos en el diccionario
+#include "stdafx.h"
+#include <string.h>
+#include "corrector.h"
+
+/***************************************
+    DICCIONARIO: Esta función crea el diccionario completo
+    char *	szNombre				:	Nombre del archivo de donde se sacarán las palabras del diccionario
+    char	szPalabras[][TAMTOKEN]	:	Arreglo con las palabras completas del diccionario
+    int		iEstadisticas[]			:	Arreglo con el número de veces que aparecen las palabras en el diccionario
+    int &	iNumElementos			:	Número de elementos en el diccionario
 **************************************/
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <cstring>
+void Diccionario(char* szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[], int& iNumElementos) {
+    FILE* fp = NULL; // Puntero al archivo
+    char buffer[300]; // Buffer temporal para leer líneas
+    iNumElementos = 0; // Inicializamos el contador
 
-#define TAMTOKEN 100 // Tamaño máximo de cada palabra
-
-void Diccionario(const char* szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[], int& iNumElementos) {
-    std::ifstream archivo(szNombre); // Archivo de entrada
-    std::string linea;               // Línea leída del archivo
-    iNumElementos = 0;               // Inicializamos el contador de elementos
-
-    // Verificar si se abrió correctamente el archivo
-    if (!archivo.is_open()) {
-        std::cerr << "No se pudo abrir el archivo " << szNombre << ". Verifica la ruta o los permisos.\n";
+    // Intentar abrir el archivo
+    fp = fopen(szNombre, "r");
+    if (fp == NULL) {
+        printf("No se pudo abrir el archivo %s. Verifica que el archivo existe y tiene los permisos correctos.\n", szNombre);
         return;
     }
 
-    // Leer el archivo línea por línea
-    while (std::getline(archivo, linea)) {
-        std::istringstream stream(linea); // Crear un flujo para procesar las palabras en la línea
-        std::string palabra;
-
-        // Leer palabra por palabra en la línea
-        while (stream >> palabra) {
-            // Verificar que no exceda el tamaño máximo de elementos
+    // Leer línea por línea
+    while (fgets(buffer, sizeof(buffer), fp)) {
+        // Tokenizar el contenido de la línea
+        char* token = strtok(buffer, " \n\r");
+        while (token != NULL) {
+            // Evitar exceder el límite del diccionario
             if (iNumElementos >= TAMTOKEN) {
-                std::cerr << "Se ha alcanzado el límite de palabras permitidas en el diccionario.\n";
-                archivo.close();
-                return;
+                printf("El diccionario ha alcanzado el límite de %d palabras.\n", TAMTOKEN);
+                break;
             }
 
-            // Copiar la palabra al arreglo de palabras
-            strncpy(szPalabras[iNumElementos], palabra.c_str(), TAMTOKEN - 1);
-            szPalabras[iNumElementos][TAMTOKEN - 1] = '\0'; // Asegurar el fin de cadena
+            // Guardar la palabra en el arreglo
+            strncpy(szPalabras[iNumElementos], token, TAMTOKEN - 1);
+            szPalabras[iNumElementos][TAMTOKEN - 1] = '\0'; // Asegurar terminación
 
-            // Inicializar la estadística de aparición
+            // Inicializar el contador de estadísticas
             iEstadisticas[iNumElementos] = 1;
 
-            // Incrementar el contador de palabras
+            // Incrementar el contador
             iNumElementos++;
+
+            // Continuar con el siguiente token
+            token = strtok(NULL, " \n\r");
         }
     }
 
     // Cerrar el archivo
-    archivo.close();
+    fclose(fp);
 
-    // Informar del número de palabras leídas
-    std::cout << "Diccionario cargado con " << iNumElementos << " palabras.\n";
+    // Reportar resultados
+    printf("Diccionario cargado con %d palabras.\n", iNumElementos);
 }
